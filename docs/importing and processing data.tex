@@ -1,0 +1,78 @@
+\documentclass{article}
+\usepackage{amsmath} % For mathematical symbols
+\usepackage{graphicx} % For handling images
+\usepackage{url} % For handling URLs
+\usepackage{hyperref} % For clickable links
+\usepackage{parskip} % For paragraph spacing
+
+\title{Importing and Processing data with Python}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This guide outlines the essential Python libraries and steps for importing and processing EEG data, especially for applications involving ERP (Event-Related Potential) analysis. We will cover data import, filtering, and segmentation, using libraries such as MNE, SciPy, NumPy, and Matplotlib.
+
+\section{Required Libraries for EEG Data Analysis}
+The following libraries are commonly used in EEG data analysis:
+\begin{itemize}
+    \item \textbf{MNE (Machines for Neural Experiments)}: A Python package specifically for EEG data analysis, offering functions for preprocessing, filtering, artifact removal, time-frequency analysis, and visualization.
+    \item \textbf{SciPy}: Provides scientific routines and enables loading of MATLAB files for EEG data.
+    \item \textbf{NumPy}: Supports multi-dimensional arrays, matrices, and mathematical functions, essential for data manipulation.
+    \item \textbf{Matplotlib}: A visualization library used to plot EEG signals, spectrograms, and more.
+\end{itemize}
+
+\section{Importing EEG Data}
+When loading EEG data from a \texttt{.mat} file, the contents are stored in a dictionary-like object with keys representing different data segments. EEG data is usually organized as a multi-dimensional array with the shape attribute denoting the size of each dimension:
+\begin{align*}
+    \text{Number of channels} &= \texttt{eeg.data.shape[0]} \\
+    \text{Number of time samples} &= \texttt{eeg.data.shape[1]} \\
+    \text{Number of trials} &= \texttt{eeg.data.shape[2]}
+\end{align*}
+
+Using the MNE library, we create an \texttt{Info} object to store details like channel names, sampling frequency, and channel types. The sampling rate should be set according to the data, e.g., 512 Hz for BCI Competition III data.
+
+\section{Filtering EEG Data}
+EEG signals span a range of frequencies (typically 1-30 Hz for relevant activity), but also contain noise:
+\begin{itemize}
+    \item \textbf{Low-frequency noise}: Caused by slow movements or wire shifts.
+    \item \textbf{High-frequency noise}: Caused by muscle movements or electromagnetic interference.
+\end{itemize}
+
+To retain only the relevant band (1-30 Hz), we apply a band-pass filter:
+\begin{itemize}
+    \item \textbf{Low-pass filter}: Removes high-frequency noise.
+    \item \textbf{High-pass filter}: Removes slow drifts.
+\end{itemize}
+
+\textbf{Tip}: Always filter the data before segmenting into shorter epochs. Use MNE’s \texttt{.filter()} method as follows:
+\begin{verbatim}
+raw_filt = raw.copy().filter(low_cut, high_cut)
+\end{verbatim}
+where \texttt{low\_cut} is typically set to 0.1 Hz and \texttt{high\_cut} to 30 Hz.
+
+\section{Segmentation into ERP Epochs}
+After filtering, segment the EEG data into \textbf{epochs}, which are time-locked to specific events (e.g., stimuli or responses). The \texttt{events} array and an event dictionary (mapping codes to labels) are used to define these segments:
+\begin{verbatim}
+events, events_dict = mne.events_from_annotations(raw_filt)
+\end{verbatim}
+The \texttt{events} array has three columns: 
+\begin{itemize}
+    \item \textbf{First column}: Index of each event in the data.
+    \item \textbf{Second column}: Usually zero, ignored.
+    \item \textbf{Third column}: Event code as an integer.
+\end{itemize}
+
+\subsection{Event Dictionaries}
+MNE assigns unique integer values to each event code and stores this mapping in the event dictionary. This helps standardize event codes from different data sources.
+
+\section{References}
+\begin{itemize}
+    \item Neurotist. (2024, February 12). \emph{Importing MATLAB Files into Python: A Step-by-Step Guide for EEG Data Analysis with MNE}. Medium. Retrieved from \url{https://medium.com/@neurotist/importing-matlab-files-into-python-a-step-by-step-guide-for-eeg-data-analysis-with-mne-d6454a07c066}
+    \item \emph{Filtering EEG Data - Neural Data Science in Python}. (n.d.). Retrieved from \url{https://neuraldatascience.io/7-eeg/erp_filtering.html}
+\end{itemize}
+
+\end{document}
